@@ -10,7 +10,7 @@ Based in part on apache2 module code by Sam Quigley <sq@wesabe.com>, Tim Stoop <
 ## Class: nginx ##
 
 Parameters (used in nginx.conf.erb) :
-       * $nginx_user. Defaults to 'www-data'. 
+       * $nginx_user. Defaults to 'www-data' (Debian), 'nginx' (RedHat). 
        * $nginx_worker_processes. Defaults to '1'.
        * $nginx_worker_connections. Defaults to '1024'.
 
@@ -18,8 +18,8 @@ Install nginx.
 Create config directories :
 	* /etc/nginx/conf.d for http config snippet
 	* /etc/nginx/includes for sites includes
-	* /etc/nginx/sites-enabled
-	* /etc/nginx/sites-available
+	* /etc/nginx/sites-enabled (Debian only)
+	* /etc/nginx/sites-available (Debian only)
 	* /etc/nginx/ssl
 
 Provide 4 definitions : 
@@ -44,7 +44,8 @@ Parameters :
 
 ###  Define: nginx::site ###
 
-Install a nginx site in /etc/nginx/sites-available (and symlink in /etc/nginx/sites-enabled). 
+Install a nginx site in /etc/nginx/sites-available (and symlink in /etc/nginx/sites-enabled) in Debian.
+Install a nginx site in /etc/nginx/conf.d in RedHat.
 
 Parameters :
 	* ensure: typically set to "present" or "absent". Defaults to "present"

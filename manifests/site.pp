@@ -1,6 +1,7 @@
 # Define: nginx::site
 #
-# Install a nginx site in /etc/nginx/sites-available (and symlink in /etc/nginx/sites-enabled).
+# Install a nginx site in /etc/nginx/sites-available (and symlink in /etc/nginx/sites-enabled) for Debian.
+# Install a nginx site in /etc/nginx/conf.d for RedHat.
 #
 #
 # Parameters :
@@ -8,6 +9,8 @@
 # * content: site definition (should be a template).
 #
 define nginx::site($ensure='present', $content='') {
+  include nginx::params
+
   case $ensure {
     'present' : {
       nginx::install_site { $name:
@@ -15,11 +18,11 @@ define nginx::site($ensure='present', $content='') {
       }
     }
     'absent' : {
-      exec { "/bin/rm -f /etc/nginx/sites-enabled/${name}":
-        onlyif  => "/bin/sh -c '[ -L /etc/nginx/sites-enabled/${name} ] && \
-          [ /etc/nginx/sites-enabled/$name -ef /etc/nginx/sites-available/${name} ]'",
+      exec { "/bin/rm -f ${nginx_sites_enabled}/${name}":
+        onlyif  => "/bin/sh -c '[ -L ${nginx_sites_enabled}/${name} ] && \
+          [ ${nginx_sites_enabled}/${name} -ef $nginx_sites_available/${name} ]'",
         notify  => Service['nginx'],
-        require => Package['nginx'],
+        require => Package[$nginx::params::package_name],
       }
     }
     default: { err ("Unknown ensure value: '$ensure'") }

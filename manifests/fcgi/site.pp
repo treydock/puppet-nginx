@@ -45,6 +45,7 @@ define nginx::fcgi::site(
   $ssl_certificate     = undef,
   $ssl_certificate_key = undef,
   $ssl_session_timeout = '5m') {
+  include nginx::params
 
   $real_server_name = $server_name ? {
     undef   => $name,
@@ -61,20 +62,20 @@ define nginx::fcgi::site(
     exec { "generate-${name}-certs":
       command => "/usr/bin/openssl req -new -inform PEM -x509 -nodes -days 999 -subj \
         '/C=ZZ/ST=AutoSign/O=AutoSign/localityName=AutoSign/commonName=${real_server_name}/organizationalUnitName=AutoSign/emailAddress=AutoSign/' \
-        -newkey rsa:2048 -out /etc/nginx/ssl/${name}.pem -keyout /etc/nginx/ssl/${name}.key",
-      unless  => "/usr/bin/test -f /etc/nginx/ssl/${name}.pem",
-      require => File['/etc/nginx/ssl'],
+        -newkey rsa:2048 -out ${nginx_conf_dir}/ssl/${name}.pem -keyout ${nginx_conf_dir}/ssl/${name}.key",
+      unless  => "/usr/bin/test -f ${nginx_conf_dir}/ssl/${name}.pem",
+      require => File["${nginx_conf_dir}/ssl"],
       notify  => Service['nginx'],
     }
   }
 
   $real_ssl_certificate = $ssl_certificate ? {
-    undef   => "/etc/nginx/ssl/${name}.pem",
+    undef   => "${nginx_conf_dir}/ssl/${name}.pem",
     default => $ssl_certificate,
   }
 
   $real_ssl_certificate_key = $ssl_certificate_key ? {
-    undef   => "/etc/nginx/ssl/${name}.key",
+    undef   => "${nginx_conf_dir}/ssl/${name}.key",
     default => $ssl_certificate_key,
   }
 

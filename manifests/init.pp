@@ -3,7 +3,7 @@
 # Install nginx.
 #
 # Parameters:
-# * $nginx_user. Defaults to 'www-data'.
+# * $nginx_user. Defaults to Debian: 'www-data', RedHat: .
 # * $nginx_worker_processes. Defaults to '1'.
 # * $nginx_worker_connections. Defaults to '1024'.
 #
@@ -17,36 +17,38 @@
 # * nginx::site_include (site includes)
 #
 # Templates:
-#   - nginx.conf.erb => /etc/nginx/nginx.conf
+#   - Debian: nginx.conf.erb => /etc/nginx/nginx.conf
+#   - RedHat: nginx.conf.rhel.erb => /etc/nginx/nginx.conf
 #
 class nginx inherits nginx::params {
-  $real_nginx_user = $::nginx_user ? {
-    undef   => 'www-data',
+  $nginx_user_real = $::nginx_user ? {
+    undef   => $nginx_user_default,
     default => $::nginx_user
   }
 
-  $real_nginx_worker_processes = $::nginx_worker_processes ? {
-    undef   => '1',
+  $nginx_worker_processes_real = $::nginx_worker_processes ? {
+    undef   => $nginx_worker_processes_default,
     default => $::nginx_worker_processes
   }
 
-  $real_nginx_worker_connections = $::nginx_worker_connections ? {
-    undef   => '1024',
+  $nginx_worker_connections_real = $::nginx_worker_connections ? {
+    undef   => $nginx_worker_connections_default,
     default => $::nginx_worker_connections
   }
 
-  if ! defined(Package['nginx']) { package { 'nginx': ensure => installed }}
+  if ! defined(Package[$package_name]) { package { $package_name: ensure => installed }}
 
   #restart-command is a quick-fix here, until http://projects.puppetlabs.com/issues/1014 is solved
-  service { 'nginx':
-    ensure     => running,
-    enable     => true,
-    hasrestart => true,
-    require    => File['/etc/nginx/nginx.conf'],
-    restart    => '/etc/init.d/nginx reload'
+  service { $service_name:
+    ensure      => running,
+    enable      => true,
+    hasrestart  => true,
+    require     => File[$nginx_conf_path],
+    restart     => '/etc/init.d/nginx reload',
+    alias       => 'nginx', # Allow external modules to notify independent of service_name change
   }
 
-  file { '/etc/nginx/nginx.conf':
+  file { $nginx_conf_path:
     ensure  => present,
     mode    => '0644',
     owner   => 'root',
@@ -56,42 +58,26 @@ class nginx inherits nginx::params {
       default   => template('nginx/nginx.conf.erb'),
     },
     notify  => Service['nginx'],
-    require => Package['nginx'],
+    require => Package[$package_name],
   }
 
-  file { $nginx_conf:
+  file { [ "${nginx_conf_dir}/ssl", $nginx_confd_dir, $nginx_includes_dir ]:
     ensure  => directory,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
-    require => Package['nginx'],
-  }
-
-  file { '/etc/nginx/ssl':
-    ensure  => directory,
-    mode    => '0644',
-    owner   => 'root',
-    group   => 'root',
-    require => Package['nginx'],
-  }
-
-  file { $nginx_includes:
-    ensure  => directory,
-    mode    => '0644',
-    owner   => 'root',
-    group   => 'root',
-    require => Package['nginx'],
+    require => Package[$package_name],
   }
 
   # Nuke default files
-  file { '/etc/nginx/fastcgi_params':
+  file { "${nginx_conf_dir}/fastcgi_params":
     ensure  => absent,
-    require => Package['nginx'],
+    require => Package[$package_name],
   }
 
   # Create base directory for web roots
   file { $docroot_base_dir:
     ensure  => directory,
-    require => Package['nginx'],
+    require => Package[$package_name],
   }
 }

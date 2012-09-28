@@ -18,7 +18,7 @@ define nginx::install_site($content=undef) {
         group   => 'root',
         alias   => "sites-${name}",
         notify  => Service['nginx'],
-        require => Package['nginx'],
+        require => Package[$nginx::params::package_name],
       }
     }
     default: {
@@ -29,17 +29,17 @@ define nginx::install_site($content=undef) {
         group   => 'root',
         alias   => "sites-$name",
         content => $content,
-        require => Package['nginx'],
         notify  => Service['nginx'],
+        require => Package[$nginx::params::package_name],
       }
     }
   }
 
   if $::osfamily == 'Debian' {
     # now, enable it.
-    exec { "ln -s /etc/nginx/sites-available/${name} /etc/nginx/sites-enabled/${name}":
-      unless  => "/bin/sh -c '[ -L /etc/nginx/sites-enabled/${name} ] && \
-        [ /etc/nginx/sites-enabled/${name} -ef /etc/nginx/sites-available/${name} ]'",
+    exec { "ln -s ${nginx_sites_available}/${name} ${nginx_sites_enabled}/${name}":
+      unless  => "/bin/sh -c '[ -L ${nginx_sites_enabled}/${name} ] && \
+        [ ${nginx_sites_enabled}/${name} -ef ${nginx_sites_available}/${name} ]'",
       path    => ['/usr/bin/', '/bin/'],
       notify  => Service['nginx'],
       require => File["sites-${name}"],

@@ -7,13 +7,15 @@
 # * content: include definition (should be a template).
 #
 define nginx::site_include($ensure='present', $content='') {
-  file { "${nginx::nginx_includes}/${name}.inc":
+  include nginx::params
+  
+  file { "${nginx::params::nginx_includes_dir}/${name}.inc":
     ensure  => $ensure,
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
     content => $content,
-    require => File[$nginx::nginx_includes],
+    require => File[$nginx::params::nginx_includes_dir],
     notify  => Service['nginx'],
   }
 }
