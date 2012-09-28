@@ -1,16 +1,16 @@
 server {
         listen   <%= listen %> ;
 
-	server_name  <% real_server_name.each do |s_n| -%><%= s_n %> <% end -%>;
+	server_name  <% server_name_real.each do |s_n| -%><%= s_n %> <% end -%>;
 
-        access_log  <%= real_access_log %>;
+        access_log  <%= access_log_real %>;
 
 	root <%= root %>;
 
 <% if listen == '443' %>
         ssl  on;
-        ssl_certificate  <%= real_ssl_certificate %>;
-        ssl_certificate_key  <%= real_ssl_certificate_key %>;
+        ssl_certificate  <%= ssl_certificate_real %>;
+        ssl_certificate_key  <%= ssl_certificate_key_real %>;
 
         ssl_session_timeout  <%= ssl_session_timeout %>;
 

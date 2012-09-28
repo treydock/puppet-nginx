@@ -1,4 +1,4 @@
-# Define: site_include
+# Define: nginx::site_include
 #
 # Define a site config include in /etc/nginx/includes
 #
@@ -8,7 +8,7 @@
 #
 define nginx::site_include($ensure='present', $content='') {
   include nginx::params
-  
+
   file { "${nginx::params::nginx_includes_dir}/${name}.inc":
     ensure  => $ensure,
     mode    => '0644',
@@ -19,4 +19,3 @@ define nginx::site_include($ensure='present', $content='') {
     notify  => Service['nginx'],
   }
 }
-

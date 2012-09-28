@@ -1,3 +1,15 @@
+# Class: nginx::params
+#
+# The nginx configuration settings.
+#
+# Parameters:
+#
+# Actions:
+#
+# Requires:
+#
+# Sample Usage:
+#
 class nginx::params {
 
   case $::osfamily {
@@ -7,6 +19,7 @@ class nginx::params {
       $nginx_user_default             = 'nginx'
       $nginx_conf_dir                 = '/etc/nginx'
       $nginx_conf_path                = "${nginx_conf_dir}/nginx.conf"
+      $nginx_conf_template            = template('nginx/nginx.conf.rhel.erb')
       $nginx_includes_dir             = "${nginx_conf_dir}/includes"
       $nginx_confd_dir                = "${nginx_conf_dir}/conf.d"
       $nginx_sites_enabled            = "${nginx_conf_dir}/conf.d"
@@ -16,7 +29,7 @@ class nginx::params {
       # Configuration defaults
       $nginx_worker_processes_default = '1'
       $nginx_worker_connections_real  = '1024'
-    } 
+    }
 
     'Debian': {
       $package_name                   = 'nginx'
@@ -24,6 +37,7 @@ class nginx::params {
       $nginx_user_default             = 'www-data'
       $nginx_conf_dir                 = '/etc/nginx'
       $nginx_conf_path                = "${nginx_conf_dir}/nginx.conf"
+      $nginx_conf_template            = template('nginx/nginx.conf.erb')
       $nginx_includes_dir             = "${nginx_conf_dir}/includes"
       $nginx_confd_dir                = "${nginx_conf_dir}/conf.d"
       $nginx_sites_enabled            = "${nginx_conf_dir}/sites-enabled"

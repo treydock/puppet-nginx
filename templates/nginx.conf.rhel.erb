@@ -15,8 +15,8 @@
 #
 #----------------------------------------------------------------------
 
-user              <%= real_nginx_user %>;
-worker_processes  <%= real_nginx_worker_processes %>;
+user              <%= nginx_user_real %>;
+worker_processes  <%= nginx_worker_processes_real %>;
 
 error_log  /var/log/nginx/error.log;
 #error_log  /var/log/nginx/error.log  notice;
@@ -33,7 +33,7 @@ pid        /var/run/nginx.pid;
 #----------------------------------------------------------------------
 
 events {
-    worker_connections  <%= real_nginx_worker_connections %>;
+    worker_connections  <%= nginx_worker_connections_real %>;
 }
 
 

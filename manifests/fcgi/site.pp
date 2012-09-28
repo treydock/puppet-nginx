@@ -47,36 +47,40 @@ define nginx::fcgi::site(
   $ssl_session_timeout = '5m') {
   include nginx::params
 
-  $real_server_name = $server_name ? {
+  $ssl_certificate_dir          = "${nginx::params::nginx_conf_dir}/ssl"
+  $ssl_certificate_default      = "${ssl_certificate_dir}/${name}.pem"
+  $ssl_certificate_key_default  = "${ssl_certificate_dir}/${name}.key"
+
+  $server_name_real = $server_name ? {
     undef   => $name,
     default => $server_name,
   }
 
-  $real_access_log = $access_log ? {
+  $access_log_real = $access_log ? {
     undef   => "/var/log/nginx/${name}_access.log",
     default => $access_log,
   }
 
-  # Autogenerating ssl certs
-  if $listen == '443' and  $ensure == 'present' and ($ssl_certificate == undef or $ssl_certificate_key == undef) {
-    exec { "generate-${name}-certs":
-      command => "/usr/bin/openssl req -new -inform PEM -x509 -nodes -days 999 -subj \
-        '/C=ZZ/ST=AutoSign/O=AutoSign/localityName=AutoSign/commonName=${real_server_name}/organizationalUnitName=AutoSign/emailAddress=AutoSign/' \
-        -newkey rsa:2048 -out ${nginx_conf_dir}/ssl/${name}.pem -keyout ${nginx_conf_dir}/ssl/${name}.key",
-      unless  => "/usr/bin/test -f ${nginx_conf_dir}/ssl/${name}.pem",
-      require => File["${nginx_conf_dir}/ssl"],
-      notify  => Service['nginx'],
-    }
-  }
-
-  $real_ssl_certificate = $ssl_certificate ? {
-    undef   => "${nginx_conf_dir}/ssl/${name}.pem",
+  $ssl_certificate_real = $ssl_certificate ? {
+    undef   => $ssl_certificate_default,
     default => $ssl_certificate,
   }
 
-  $real_ssl_certificate_key = $ssl_certificate_key ? {
-    undef   => "${nginx_conf_dir}/ssl/${name}.key",
+  $ssl_certificate_key_real = $ssl_certificate_key ? {
+    undef   => $ssl_certificate_key_default,
     default => $ssl_certificate_key,
+  }
+
+  # Autogenerating ssl certs
+  if $listen == '443' and  $ensure == 'present' and ($ssl_certificate_real == undef or $ssl_certificate_key_real == undef) {
+    exec { "generate-${name}-certs":
+      command => "/usr/bin/openssl req -new -inform PEM -x509 -nodes -days 999 -subj \
+        '/C=ZZ/ST=AutoSign/O=AutoSign/localityName=AutoSign/commonName=${server_name_real}/organizationalUnitName=AutoSign/emailAddress=AutoSign/' \
+        -newkey rsa:2048 -out ${ssl_certificate_real} -keyout ${ssl_certificate_key_real}",
+      unless  => "/usr/bin/test -f ${ssl_certificate_real}",
+      require => File[$ssl_certificate_dir],
+      notify  => Service['nginx'],
+    }
   }
 
   nginx::site { $name:

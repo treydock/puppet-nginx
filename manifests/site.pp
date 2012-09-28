@@ -11,6 +11,9 @@
 define nginx::site($ensure='present', $content='') {
   include nginx::params
 
+  $site_conf          = "${nginx::params::nginx_sites_available}/${name}"
+  $enabled_site_conf  = "${nginx::params::nginx_sites_enabled}/${name}"
+
   case $ensure {
     'present' : {
       nginx::install_site { $name:
@@ -18,13 +21,13 @@ define nginx::site($ensure='present', $content='') {
       }
     }
     'absent' : {
-      exec { "/bin/rm -f ${nginx_sites_enabled}/${name}":
-        onlyif  => "/bin/sh -c '[ -L ${nginx_sites_enabled}/${name} ] && \
-          [ ${nginx_sites_enabled}/${name} -ef $nginx_sites_available/${name} ]'",
+      exec { "/bin/rm -f ${enabled_site_conf}":
+        onlyif  => "/bin/sh -c '[ -L ${enabled_site_conf} ] && \
+          [ ${enabled_site_conf} -ef ${site_conf} ]'",
         notify  => Service['nginx'],
         require => Package[$nginx::params::package_name],
       }
     }
-    default: { err ("Unknown ensure value: '$ensure'") }
+    default: { err ("Unknown ensure value: '${ensure}'") }
   }
 }
