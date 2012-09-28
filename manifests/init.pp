@@ -19,10 +19,7 @@
 # Templates:
 #   - nginx.conf.erb => /etc/nginx/nginx.conf
 #
-class nginx {
-  $nginx_includes = '/etc/nginx/includes'
-  $nginx_conf = '/etc/nginx/conf.d'
-
+class nginx inherits nginx::params {
   $real_nginx_user = $::nginx_user ? {
     undef   => 'www-data',
     default => $::nginx_user
@@ -54,7 +51,10 @@ class nginx {
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
-    content => template('nginx/nginx.conf.erb'),
+    content => $::osfamily ? {
+      'RedHat'  => template('nginx/nginx.conf.rhel.erb'),
+      default   => template('nginx/nginx.conf.erb'),
+    },
     notify  => Service['nginx'],
     require => Package['nginx'],
   }
@@ -86,6 +86,12 @@ class nginx {
   # Nuke default files
   file { '/etc/nginx/fastcgi_params':
     ensure  => absent,
+    require => Package['nginx'],
+  }
+
+  # Create base directory for web roots
+  file { $docroot_base_dir:
+    ensure  => directory,
     require => Package['nginx'],
   }
 }

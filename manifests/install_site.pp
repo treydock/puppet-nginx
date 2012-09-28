@@ -4,10 +4,14 @@
 # This definition is private, not intended to be called directly
 #
 define nginx::install_site($content=undef) {
+  include nginx::params
+
+  $site_conf = "${nginx::params::nginx_sites_available}/${name}"
+
   # first, make sure the site config exists
   case $content {
     undef: {
-      file { "/etc/nginx/sites-available/${name}":
+      file { $site_conf:
         ensure  => present,
         mode    => '0644',
         owner   => 'root',
@@ -18,7 +22,7 @@ define nginx::install_site($content=undef) {
       }
     }
     default: {
-      file { "/etc/nginx/sites-available/${name}":
+      file { $site_conf:
         ensure  => present,
         mode    => '0644',
         owner   => 'root',
@@ -31,12 +35,14 @@ define nginx::install_site($content=undef) {
     }
   }
 
-  # now, enable it.
-  exec { "ln -s /etc/nginx/sites-available/${name} /etc/nginx/sites-enabled/${name}":
-    unless  => "/bin/sh -c '[ -L /etc/nginx/sites-enabled/${name} ] && \
-      [ /etc/nginx/sites-enabled/${name} -ef /etc/nginx/sites-available/${name} ]'",
-    path    => ['/usr/bin/', '/bin/'],
-    notify  => Service['nginx'],
-    require => File["sites-${name}"],
+  if $::osfamily == 'Debian' {
+    # now, enable it.
+    exec { "ln -s /etc/nginx/sites-available/${name} /etc/nginx/sites-enabled/${name}":
+      unless  => "/bin/sh -c '[ -L /etc/nginx/sites-enabled/${name} ] && \
+        [ /etc/nginx/sites-enabled/${name} -ef /etc/nginx/sites-available/${name} ]'",
+      path    => ['/usr/bin/', '/bin/'],
+      notify  => Service['nginx'],
+      require => File["sites-${name}"],
+    }
   }
 }
