@@ -55,7 +55,7 @@ class nginx {
     mode    => '0644',
     owner   => 'root',
     group   => 'root',
-    content => $nginx::params::nginx_conf_template,
+    content => template($nginx::params::nginx_conf_template),
     notify  => Service['nginx'],
     require => Package[$nginx::params::package_name],
   }
